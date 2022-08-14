@@ -13,12 +13,19 @@ const root = ReactDOM.createRoot(rootElement);
 class Undone extends React.Component {
   render() {
     let undoneTasks = [];
+    const setDone = this.props.setDone;
+    const removeItem = this.props.removeItem;
     for (let task of this.props.tasks) {
       undoneTasks.push(
         <div key={task.id} className="undone">
-          <button onClick={this.props.setReady(task.id)}>Check</button>
-          {/* <button onClick={this.props.remove(task.id)}>Delete</button> */}
-          <p> {task.title}</p>
+          <div className="item">
+            <p className="undone"> {task.title}</p>
+            <div>
+              <button onClick={() => setDone(task.id)}>Check</button>
+              <button onClick={() => removeItem(task.id)}>Remove</button>
+            </div>
+          </div>
+          <hr />
         </div>
       );
     }
@@ -29,12 +36,19 @@ class Undone extends React.Component {
 class Done extends React.Component {
   render() {
     let doneTasks = [];
+    const setUndone = this.props.setUndone;
+    const removeItem = this.props.removeItem;
     for (let task of this.props.tasks) {
       doneTasks.push(
-        <div key={task.id} className="done">
-          <button onClick={this.props.setReady(task.id)}>Check</button>
-          {/* <button onClick={this.props.remove(task.id)}>Delete</button> */}
-          <p> {task.title}</p>
+        <div key={task.id}>
+          <div className="item">
+            <p className="done"> {task.title}</p>
+            <div>
+              <button onClick={() => setUndone(task.id)}>Uncheck</button>
+              <button onClick={() => removeItem(task.id)}>Remove</button>
+            </div>
+          </div>
+          <hr />
         </div>
       );
     }
@@ -45,9 +59,27 @@ class Done extends React.Component {
 class Todo extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      tasks: []
-    };
+
+    this.setDone = this.setDone.bind(this);
+    this.setUndone = this.setUndone.bind(this);
+    this.removeItem = this.removeItem.bind(this);
+    const storage = localStorage.getItem("tasks");
+    console.log(storage);
+
+    if (storage) {
+      this.state = {
+        tasks: JSON.parse(storage),
+      };
+    } else {
+      this.state = {
+        tasks: [],
+      };
+    }
+  }
+
+  saveChanges(tasks) {
+    this.setState({ tasks: tasks });
+    localStorage.setItem("tasks", JSON.stringify(tasks));
   }
 
   addTodo() {
@@ -58,20 +90,31 @@ class Todo extends React.Component {
       const newTodo = {
         title: value,
         status: false,
-        id: generateId()
+        id: generateId(),
       };
 
       tasks.push(newTodo);
 
-      that.setState({ tasks: tasks });
+      that.saveChanges(tasks);
     };
   }
-  setReady(id) {
-    let tasks = JSON.parse(JSON.stringify(this.state.tasks)); //error
+  setDone(id) {
+    let tasks = JSON.parse(JSON.stringify(this.state.tasks));
     let taskIndex = tasks.findIndex((el) => el.id === id);
-    console.log(taskIndex);
     tasks[taskIndex].status = true;
-    this.setState({ tasks: tasks });
+    this.saveChanges(tasks);
+  }
+  setUndone(id) {
+    let tasks = JSON.parse(JSON.stringify(this.state.tasks));
+    let taskIndex = tasks.findIndex((el) => el.id === id);
+    tasks[taskIndex].status = false;
+    this.saveChanges(tasks);
+  }
+  removeItem(id) {
+    let tasks = JSON.parse(JSON.stringify(this.state.tasks));
+    let taskIndex = tasks.findIndex((el) => el.id === id);
+    tasks.splice(taskIndex, 1);
+    this.saveChanges(tasks);
   }
 
   render() {
@@ -84,11 +127,23 @@ class Todo extends React.Component {
           <input className="todo-input" type="text" />
           <button onClick={this.addTodo()}>Add</button>
         </div>
-        <div className="undone">
-          <Undone setReady={this.setReady} tasks={undoneTasks} />
+        <div>
+          <h2>Undone tasks</h2>
+          <hr />
+          <Undone
+            setDone={this.setDone}
+            removeItem={this.removeItem}
+            tasks={undoneTasks}
+          />
         </div>
-        <div className="done">
-          <Done tasks={doneTasks} />
+        <div>
+          <h2>Done tasks</h2>
+          <hr />
+          <Done
+            setUndone={this.setUndone}
+            removeItem={this.removeItem}
+            tasks={doneTasks}
+          />
         </div>
       </div>
     );

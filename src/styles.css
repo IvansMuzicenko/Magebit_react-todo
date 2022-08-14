@@ -12,5 +12,13 @@
   width: 70%;
 }
 .done {
-  background: rgba(0, 128, 0, 0.377);
+  text-decoration: line-through;
+}
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+hr {
+  margin: 0;
 }
